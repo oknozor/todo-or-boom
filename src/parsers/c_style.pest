@@ -1,0 +1,20 @@
+comments = { SOI ~ code* ~ EOI }
+code =  { code_block | comment }
+code_block = _{ (!comment ~ ANY) }
+comment = { line_comment | block_comment }
+
+
+line_comment = { line_start ~ comment_content ~ (NEWLINE | EOI)}
+block_comment = { block_start ~ (todo | fixme)? ~ block_text ~ block_end}
+
+comment_content = { whitespaces ~ (todo | fixme)? ~ line_text }
+line_text = @{ (!NEWLINE ~ ANY)* }
+block_text = @{ (!block_end ~ (todo | ANY))* }
+
+todo = @{ ^"todo" }
+fixme = @{ ^"fixme" }
+
+whitespaces = _{ WHITE_SPACE* }
+line_start = _{ whitespaces ~ "//" ~ whitespaces }
+block_start = _{ whitespaces ~ "/*" ~ whitespaces }
+block_end = _{ whitespaces ~ "*/" }
