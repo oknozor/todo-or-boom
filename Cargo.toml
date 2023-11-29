@@ -11,4 +11,3 @@ pest = "2.7.5"
 pest_derive = "2.7.5"
 miette = { version = "5.5.0", features = ["fancy"] }
 thiserror = "1.0.50"
-eyre = "0.6.8"
