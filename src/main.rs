@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::PathBuf;
+use std::process::exit;
 
 use clap::Parser;
 use wax::Glob;
@@ -16,34 +17,24 @@ mod parsers;
     author = "Paul D. <paul.delafosse@protonmail.com>"
 )]
 pub struct Cli {
+    /// Base path where ToB start scanning files
     #[arg(short = 'p', long)]
     path: Option<PathBuf>,
+    /// A Glob style pattern to match files to scan
     #[arg(short = 'g', long)]
     path_pattern: Option<String>,
-    #[arg(short = 'd', long)]
-    comment_delimiters: Vec<String>,
+    /// Exclude todos from the diagnostic
     #[arg(short = 't', long, default_value = "true")]
-    include_todos: bool,
+    exclude_todos: bool,
+    /// Exclude fixmes from the diagnostic
     #[arg(short = 'f', long, default_value = "false")]
-    include_fixme: bool,
-    #[arg(short = 'c', long, default_value = "true")]
-    case_sensitive: bool,
+    exclude_fixmes: bool,
 }
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let path = cli.path.unwrap_or(std::env::current_dir()?);
     let glob_pattern = cli.path_pattern.unwrap_or("**".to_string());
-    let mut comment_delimiters = cli.comment_delimiters;
-
-    // TODO: pest
-    if comment_delimiters.is_empty() {
-        comment_delimiters.push("//".to_string());
-        comment_delimiters.push("/*".to_string());
-        comment_delimiters.push("*/".to_string());
-    }
-
-    // Comment
     let glob = Glob::new(&glob_pattern).unwrap();
     let mut diagnostics = Diagnostics::default();
     for entry in glob.walk(path) {
@@ -60,5 +51,9 @@ fn main() -> anyhow::Result<()> {
 
     println!("{}", diagnostics);
 
-    Ok(())
+    if diagnostics.is_err() {
+        exit(1)
+    } else {
+        Ok(())
+    }
 }

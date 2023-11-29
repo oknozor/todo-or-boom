@@ -10,6 +10,12 @@ pub struct Diagnostics {
     pub fixmes: Vec<Report>,
 }
 
+impl Diagnostics {
+    pub fn is_err(&self) -> bool {
+        !self.todos.is_empty() || !self.fixmes.is_empty()
+    }
+}
+
 impl fmt::Display for Diagnostics {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if self.todos.is_empty() && self.fixmes.is_empty() {
