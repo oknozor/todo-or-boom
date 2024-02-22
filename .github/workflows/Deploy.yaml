@@ -1,0 +1,157 @@
+name: Publish latest
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  upload_license:
+    name: Upload License
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: LICENSE
+          path: LICENSE
+
+  build:
+    name: Build todo-or-boom ${{ matrix.os }}-${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            windows: true
+          - os: ubuntu-latest
+            target: armv7-unknown-linux-musleabihf
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+
+    steps:
+        - uses: actions/checkout@v4
+
+        - uses: Swatinem/rust-cache@v2
+          with:
+            cache-all-crates: "true"
+            key: "${{ matrix.os }}-${{ matrix.target }}"
+
+        - uses: actions-rs/toolchain@v1
+          with:
+            toolchain: stable
+            target: ${{ matrix.target }}
+
+        - if: ${{ matrix.windows }}
+          uses: actions-rs/cargo@v1
+          with:
+            command: build
+            args: --target ${{ matrix.target }} --release --locked
+
+        - if: ${{ ! matrix.windows }}
+          uses: actions-rs/cargo@v1
+          with:
+            use-cross: true
+            command: build
+            args: --target ${{ matrix.target }} --release --locked
+
+        - if: ${{ ! matrix.windows }}
+          uses: actions/upload-artifact@v3
+          with:
+            name: ${{ matrix.target }}
+            path: target/${{ matrix.target }}/release/todo-or-boom
+
+        - if: ${{ matrix.windows }}
+          uses: actions/upload-artifact@v3
+          with:
+            name: ${{ matrix.target }}
+            path: target/${{ matrix.target }}/release/todo-or-boom.exe
+
+
+  upload_to_release:
+    needs: [ build, upload_license]
+    name: Publish todo-or-boom binaries
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_type == 'tag' }}
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          path: ~/artifacts
+
+      - name: Copy artifacts to archive
+        run: |
+          mkdir x86_64-unknown-linux-musl
+          cp -r /home/runner/artifacts/x86_64-unknown-linux-musl/todo-or-boom x86_64-unknown-linux-musl/todo-or-boom
+          chmod +x -R  x86_64-unknown-linux-musl/todo-or-boom
+          cp -r /home/runner/artifacts/LICENSE/LICENSE x86_64-unknown-linux-musl/
+          tar -czf todo-or-boom-x86_64-unknown-linux-musl.tar.gz x86_64-unknown-linux-musl/*
+          
+          mkdir armv7-unknown-linux-musleabihf
+          cp -r /home/runner/artifacts/armv7-unknown-linux-musleabihf/todo-or-boom armv7-unknown-linux-musleabihf/todo-or-boom
+          chmod +x -R  armv7-unknown-linux-musleabihf/todo-or-boom
+          cp -r /home/runner/artifacts/LICENSE/LICENSE armv7-unknown-linux-musleabihf/
+          tar -czf todo-or-boom-armv7-unknown-linux-musleabihf.tar.gz armv7-unknown-linux-musleabihf/*
+
+          mkdir aarch64-unknown-linux-gnu
+          cp -r /home/runner/artifacts/aarch64-unknown-linux-gnu/todo-or-boom aarch64-unknown-linux-gnu/todo-or-boom
+          chmod +x -R  aarch64-unknown-linux-gnu/todo-or-boom
+          cp -r /home/runner/artifacts/LICENSE/LICENSE aarch64-unknown-linux-gnu/
+          tar -czf todo-or-boom-aarch64-unknown-linux-gnu.tar.gz aarch64-unknown-linux-gnu/*
+          
+          mkdir x86_64-pc-windows-msvc
+          cp -r /home/runner/artifacts/x86_64-pc-windows-msvc/todo-or-boom.exe x86_64-pc-windows-msvc/todo-or-boom.exe
+          chmod +x -R  x86_64-pc-windows-msvc/todo-or-boom.exe
+          cp -r /home/runner/artifacts/LICENSE/LICENSE x86_64-pc-windows-msvc/
+          tar -czf todo-or-boom-x86_64-pc-windows-msvc.tar.gz x86_64-pc-windows-msvc/*
+
+          mkdir x86_64-apple-darwin
+          cp -r /home/runner/artifacts/x86_64-apple-darwin/todo-or-boom x86_64-apple-darwin/todo-or-boom
+          chmod +x -R  x86_64-apple-darwin/todo-or-boom
+          cp -r /home/runner/artifacts/LICENSE/LICENSE x86_64-apple-darwin/
+          tar -czf todo-or-boom-x86_64-apple-darwin.tar.gz x86_64-apple-darwin/*
+          
+      - uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: todo-or-boom-x86_64-unknown-linux-musl.tar.gz
+          tag: ${{ github.ref }}
+          asset_name: todo-or-boom-${{ github.ref_name }}-x86_64-unknown-linux-musl.tar.gz
+
+      - uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: todo-or-boom-armv7-unknown-linux-musleabihf.tar.gz
+          tag: ${{ github.ref_name }}
+          asset_name: todo-or-boom-${{ github.ref_name }}-armv7-unknown-linux-musleabihf.tar.gz
+
+      - uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: todo-or-boom-aarch64-unknown-linux-gnu.tar.gz
+          tag: ${{ github.ref_name }}
+          asset_name: todo-or-boom-${{ github.ref_name }}-aarch64-unknown-linux-gnu.tar.gz
+
+      - uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: todo-or-boom-x86_64-pc-windows-msvc.tar.gz
+          tag: ${{ github.ref_name }}
+          asset_name: todo-or-boom-${{ github.ref_name }}-x86_64-pc-windows-msvc.tar.gz
+
+      - uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: todo-or-boom-x86_64-apple-darwin.tar.gz
+          tag: ${{ github.ref_name }}
+          asset_name: todo-or-boom-${{ github.ref_name }}-x86_64-apple-darwin.tar.gz
