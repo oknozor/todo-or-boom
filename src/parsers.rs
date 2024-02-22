@@ -81,6 +81,7 @@ pub fn parse(file: &str, filename: &str, diagnostics: &mut Diagnostics) -> anyho
 
 #[cfg(test)]
 mod test {
+    use crate::diagnostics::Diagnostics;
     use crate::parsers::parse;
 
     #[test]
@@ -108,7 +109,8 @@ fn main() {
 }
 "#;
 
-        let diagnostics = parse(file, "toto.rs")?;
+        let mut diagnostics = Diagnostics::default();
+        parse(file, "toto.rs", &mut diagnostics)?;
         assert_eq!(diagnostics.todos.len(), 2);
         assert_eq!(diagnostics.fixmes.len(), 2);
         Ok(())
