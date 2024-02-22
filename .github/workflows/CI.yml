@@ -77,10 +77,12 @@ jobs:
         if: ${{matrix.coverage}}
         run: cargo llvm-cov nextest --lcov --output-path lcov.info
 
-      - name: Upload coverage to Codecov
+      - name: Upload coverage reports to Codecov
         if: ${{matrix.coverage}}
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4.0.1
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: oknozor/todo-or-boom
           files: lcov.info
           fail_ci_if_error: true
 
