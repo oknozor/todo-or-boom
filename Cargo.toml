@@ -5,9 +5,11 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.4.10", features = ["derive"] }
-wax = "0.6.0"
+ignore = "0.4.22"
+globset = "0.4.14"
 anyhow = "1.0.75"
 pest = "2.7.5"
 pest_derive = "2.7.5"
 miette = { version = "5.5.0", features = ["fancy"] }
+owo-colors = "4.0.0"
 thiserror = "1.0.50"

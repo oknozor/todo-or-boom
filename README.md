@@ -3,17 +3,25 @@ ToB is todos and fixme linter. You most likely want to automate its usage using 
 or in your CI/CD pipeline. 
 
 
+
+| ![example screenshot ok](docs/todo_ok.png) | ![example screenshot err](docs/todo_err.png) |
+|-------------------------------------|-------------------------------------|
+
+
 ## Warning
-⚠️ ToB is still a work in progress, currently only C-style comments are implemented, ToB will work with language like java, rust, c etc ⚠️
+⚠️ ToB is still a work in progress, currently only C-style comments are implemented, ToB will work with language like java, rust, c etc. ⚠️
 
 ## Usage
+
+see: `todo-or-boom --help`
 
 ### Command line
 
 ```shell
-todo-or-boom -g "**/*.rs"
-todo-or-boom -g "**/*.java"
+todo-or-boom -g "*.rs"
+todo-or-boom -g "*.java"
 ```
+
 ### Pre-commit git-hook
 
 ```shell
@@ -22,3 +30,6 @@ set -e
 
 todo-or-boom -g "**/*.rs"
 ```
+
+
+

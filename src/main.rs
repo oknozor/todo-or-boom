@@ -3,8 +3,6 @@ use std::path::PathBuf;
 use std::process::exit;
 
 use clap::Parser;
-use wax::Glob;
-
 use crate::diagnostics::Diagnostics;
 
 mod diagnostics;
@@ -35,10 +33,14 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let path = cli.path.unwrap_or(std::env::current_dir()?);
     let glob_pattern = cli.path_pattern.unwrap_or("**".to_string());
-    let glob = Glob::new(&glob_pattern).unwrap();
+    let glob = globset::Glob::new(&glob_pattern)?.compile_matcher();
     let mut diagnostics = Diagnostics::default();
-    for entry in glob.walk(path) {
-        let entry = entry.unwrap();
+    for entry in ignore::Walk::new(path) {
+        let entry = entry?;
+        if !glob.is_match(entry.path()) {
+            continue
+        }
+
         let Some(filename) = entry.path().file_name() else {
             continue;
         };

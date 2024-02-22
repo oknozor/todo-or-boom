@@ -2,6 +2,7 @@ use std::fmt;
 use std::fmt::Formatter;
 
 use miette::{Diagnostic, NamedSource, Report, SourceSpan};
+use owo_colors::OwoColorize;
 use thiserror::Error;
 
 #[derive(Default)]
@@ -19,7 +20,7 @@ impl Diagnostics {
 impl fmt::Display for Diagnostics {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if self.todos.is_empty() && self.fixmes.is_empty() {
-            writeln!(f, "No Todos or Fixme found")
+            writeln!(f, "{}️ No Todos or Fixme found", "✔".green())
         } else {
             writeln!(f, "Found {} Fixmes in sources", self.fixmes.len())?;
             for fixme in &self.fixmes {
@@ -30,6 +31,10 @@ impl fmt::Display for Diagnostics {
             for todo in &self.todos {
                 writeln!(f, "{:?}", todo)?;
             }
+
+            writeln!(f, "{} Found {} errors:", "×".red(), self.fixmes.len() + self.todos.len())?;
+            writeln!(f, "  - {} {} in sources", self.fixmes.len(), "Fixmes".red())?;
+            writeln!(f, "  - {} {} in sources", self.todos.len(), "Todos".yellow())?;
 
             Ok(())
         }
@@ -42,7 +47,7 @@ impl fmt::Display for Diagnostics {
 pub struct TodoDiagnostic {
     #[source_code]
     src: NamedSource,
-    #[label("This bit here")]
+    #[label("Unresolved todo")]
     bad_bit: SourceSpan,
 }
 
@@ -52,7 +57,7 @@ pub struct TodoDiagnostic {
 pub struct FixmeDiagnostic {
     #[source_code]
     src: NamedSource,
-    #[label("This bit here")]
+    #[label("Unresolved fixme")]
     bad_bit: SourceSpan,
 }
 
