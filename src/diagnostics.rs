@@ -32,9 +32,19 @@ impl fmt::Display for Diagnostics {
                 writeln!(f, "{:?}", todo)?;
             }
 
-            writeln!(f, "{} Found {} errors:", "×".red(), self.fixmes.len() + self.todos.len())?;
+            writeln!(
+                f,
+                "{} Found {} errors:",
+                "×".red(),
+                self.fixmes.len() + self.todos.len()
+            )?;
             writeln!(f, "  - {} {} in sources", self.fixmes.len(), "Fixmes".red())?;
-            writeln!(f, "  - {} {} in sources", self.todos.len(), "Todos".yellow())?;
+            writeln!(
+                f,
+                "  - {} {} in sources",
+                self.todos.len(),
+                "Todos".yellow()
+            )?;
 
             Ok(())
         }

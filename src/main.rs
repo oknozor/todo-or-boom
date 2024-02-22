@@ -2,8 +2,8 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::exit;
 
-use clap::Parser;
 use crate::diagnostics::Diagnostics;
+use clap::Parser;
 
 mod diagnostics;
 mod parsers;
@@ -38,7 +38,7 @@ fn main() -> anyhow::Result<()> {
     for entry in ignore::Walk::new(path) {
         let entry = entry?;
         if !glob.is_match(entry.path()) {
-            continue
+            continue;
         }
 
         let Some(filename) = entry.path().file_name() else {
